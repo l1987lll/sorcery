@@ -2,6 +2,8 @@ import { resolve } from 'path';
 import Node from './Node.js';
 import Chain from './Chain.js';
 
+export { createOverridePathFunction } from './utils/pathOverrides';
+
 export function load(file, options) {
 	const { node, sourcesContentByPath, sourceMapByPath } = init(file, options);
 
@@ -17,7 +19,8 @@ export function loadSync(file, options = {}) {
 }
 
 function init(file, options = {}) {
-	const node = new Node({ file });
+	const { overrideSourcePathFunc, overrideSourceRootFunc } = options;
+	const node = new Node({ file, overrideSourcePathFunc, overrideSourceRootFunc });
 
 	let sourcesContentByPath = {};
 	let sourceMapByPath = {};

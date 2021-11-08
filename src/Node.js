@@ -3,7 +3,7 @@ import { readFile, readFileSync, Promise } from 'sander';
 import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 
-export default function Node({ file, content }) {
+export default function Node({ file, content, overrideSourcePathFunc, overrideSourceRootFunc }) {
 	this.file = file ? resolve(file) : null;
 	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
@@ -16,6 +16,8 @@ export default function Node({ file, content }) {
 	this.mappings = null;
 	this.sources = null;
 	this.isOriginalSource = null;
+	this.overrideSourcePathFunc = overrideSourcePathFunc;
+	this.overrideSourceRootFunc = overrideSourceRootFunc;
 
 	this._stats = {
 		decodingTime: 0,
@@ -34,6 +36,7 @@ Node.prototype = {
 			return getMap(this, sourceMapByPath).then(map => {
 				if (!map) return null;
 
+				overridePath(this, map);
 				this.map = map;
 
 				let decodingStart = process.hrtime();
@@ -48,7 +51,9 @@ Node.prototype = {
 				this.sources = map.sources.map((source, i) => {
 					return new Node({
 						file: source ? resolve(sourceRoot, source) : null,
-						content: sourcesContent[i]
+						content: sourcesContent[i],
+						overrideSourcePathFunc: this.overrideSourcePathFunc,
+						overrideSourceRootFunc: this.overrideSourceRootFunc
 					});
 				});
 
@@ -73,6 +78,7 @@ Node.prototype = {
 		if (!map) {
 			this.isOriginalSource = true;
 		} else {
+			overridePath(this, map);
 			this.map = map;
 			this.mappings = decode(map.mappings);
 
@@ -83,7 +89,9 @@ Node.prototype = {
 			this.sources = map.sources.map((source, i) => {
 				const node = new Node({
 					file: resolve(sourceRoot, source),
-					content: sourcesContent[i]
+					content: sourcesContent[i],
+					overrideSourcePathFunc: this.overrideSourcePathFunc,
+					overrideSourceRootFunc: this.overrideSourceRootFunc
 				});
 
 				node.loadSync(sourcesContentByPath, sourceMapByPath);
@@ -172,4 +180,9 @@ function getContent(node, sourcesContentByPath) {
 	}
 
 	return Promise.resolve(node.content);
+}
+
+function overridePath(node, map) {
+	map.sources = node.overrideSourcePathFunc ? map.sources.map(s => node.overrideSourcePathFunc(node.file, s)) : map.sources;
+	map.sourceRoot = node.overrideSourceRootFunc ? node.overrideSourceRootFunc(node.file, map.sourceRoot) : map.sourceRoot;
 }
