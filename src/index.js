@@ -20,7 +20,7 @@ export function loadSync(file, options = {}) {
 
 function init(file, options = {}) {
 	const { overrideSourcePathFunc, overrideSourceRootFunc } = options;
-	const node = new Node({ file, overrideSourcePathFunc, overrideSourceRootFunc });
+	const node = new Node({ file, parent: null, overrideSourcePathFunc, overrideSourceRootFunc });
 
 	let sourcesContentByPath = {};
 	let sourceMapByPath = {};

@@ -3,7 +3,7 @@ import { readFile, readFileSync, Promise } from 'sander';
 import { decode } from 'sourcemap-codec';
 import getMap from './utils/getMap.js';
 
-export default function Node({ file, content, overrideSourcePathFunc, overrideSourceRootFunc }) {
+export default function Node({ file, content, parent, overrideSourcePathFunc, overrideSourceRootFunc }) {
 	this.file = file ? resolve(file) : null;
 	this.content = content || null; // sometimes exists in sourcesContent, sometimes doesn't
 
@@ -18,6 +18,7 @@ export default function Node({ file, content, overrideSourcePathFunc, overrideSo
 	this.isOriginalSource = null;
 	this.overrideSourcePathFunc = overrideSourcePathFunc;
 	this.overrideSourceRootFunc = overrideSourceRootFunc;
+	this.parent = parent;
 
 	this._stats = {
 		decodingTime: 0,
@@ -46,12 +47,13 @@ Node.prototype = {
 
 				const sourcesContent = map.sourcesContent || [];
 
-				const sourceRoot = resolve(dirname(this.file), map.sourceRoot || '');
+				const sourceRoot = resolve(getDirName(this), map.sourceRoot || '');
 
 				this.sources = map.sources.map((source, i) => {
 					return new Node({
 						file: source ? resolve(sourceRoot, source) : null,
 						content: sourcesContent[i],
+						parent: this,
 						overrideSourcePathFunc: this.overrideSourcePathFunc,
 						overrideSourceRootFunc: this.overrideSourceRootFunc
 					});
@@ -84,12 +86,13 @@ Node.prototype = {
 
 			sourcesContent = map.sourcesContent || [];
 
-			const sourceRoot = resolve(dirname(this.file), map.sourceRoot || '');
+			const sourceRoot = resolve(getDirName(this), map.sourceRoot || '');
 
 			this.sources = map.sources.map((source, i) => {
 				const node = new Node({
 					file: resolve(sourceRoot, source),
 					content: sourcesContent[i],
+					parent: this,
 					overrideSourcePathFunc: this.overrideSourcePathFunc,
 					overrideSourceRootFunc: this.overrideSourceRootFunc
 				});
@@ -185,4 +188,13 @@ function getContent(node, sourcesContentByPath) {
 function overridePath(node, map) {
 	map.sources = node.overrideSourcePathFunc ? map.sources.map(s => node.overrideSourcePathFunc(node.file, s)) : map.sources;
 	map.sourceRoot = node.overrideSourceRootFunc ? node.overrideSourceRootFunc(node.file, map.sourceRoot) : map.sourceRoot;
+}
+
+function getDirName(node) {
+	let curNode = node;
+	while (!curNode.file) {
+		curNode = curNode.parent;
+	}
+
+	return dirname(curNode.file);
 }
