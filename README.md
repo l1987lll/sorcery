@@ -1,3 +1,67 @@
+Forked from [Sorcery](https://github.com/Rich-Harris/sorcery) and made some changes:
+1. Update sourcemap-codec to use the exact version 1.3.0, install larger version lead to build failed.
+2. Replace \n with \r\n in test expected and actual files to fix test failures, some platform use \r\n to start a new line.
+3. Use Buffer.from instead of Buffer to fix warning of deprecated Buffer.
+4. Modify regex of matching SOURCEMAPPING_URL, the old regex might replace more content when existing multiple SOURCEMAPPING_URL at the end of the file.
+5. Add parent property to Node type, if the Node.file is null, it will use parent.file to resolve sourceRoot path.
+6. Give type to parameters of sorcery CLI.
+7. Add Feature: support overriding the path of sources and sourceRoot in sourcemap file. Usage as below:
+
+```
+New Options:
+  --osp <string>,        Override path of source in sourcemap file.    
+  --orp <string>,        Override path of sourceRoot in sourcemap file.
+
+parameter pattern:
+  jsFileRegex1 | matchRegex1 | replacement1 , jsFileRegex2 | matchRegex2 | replacement2 ...
+
+  jsFileRegex:  A regexp to match the js file which the sourcemap related to. [optional] 
+  matchRegex :  A regexp to match the original path in the source property of sourcemap. [optional]
+  replacement:  A string that will be used to replace.
+```
+Examples:
+
+```bash
+# helloWorld.js import util.js, after build helloWorld.min.js is placed in dist folder 
+# but util.min.js in current folder
+sorcery -i "dist/helloWorld.min.js" -osp "helloWorld.min.js | ./util.min.js | ../util.min.js"
+
+sorcery -i "dist/helloWorld.min.js" -osp "helloWorld.min.js | ./a.js | ../a.js , helloWorld.min.js | ./b.js | ../b.js"
+
+sorcery -i "dist/helloWorld.min.js" -osp "./util.min.js | ../util.min.js"
+
+sorcery -i "dist/helloWorld.min.js" -orp "helloWorld.min.js |  | ../"
+
+sorcery -i "dist/helloWorld.min.js" -orp "../"
+
+```
+
+You can also implement your own replace logic and pass the function as options into ***sorcery.load*** or import ***createOverridePathFunction*** to use the logic same as CLI.
+
+```js
+
+const sorcery = require('sorcery');
+const sourcePathOverrides = [
+  "helloWorld.min.js | ./a.js | ../a.js",
+  "helloWorld.min.js | ./b.js | ../b.js"
+  ];
+const sourceRootOverrides ="Webpack:/// | ./";
+const options = {
+		overrideSourcePathFunc: sorcery.createOverridePathFunction(sourcePathOverrides),
+		overrideSourceRootFunc: sorcery.createOverridePathFunction(sourceRootOverrides)
+	};
+
+sorcery.load('helloWorld.min.js', options).then(function (chain) {
+  chain.write('./', {
+          inline: false,
+          includeContent: true
+        });
+});
+
+```
+
+
+-----------------------------------------------------------------
 # sorcery.js
 
 Sourcemaps are great - if you have a JavaScript file, and you minify it, your minifier can generate a map that lets you debug as though you were looking at the original uncompressed code.
