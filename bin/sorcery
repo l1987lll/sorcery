@@ -19,7 +19,9 @@ command = minimist(process.argv.slice(2), {
 		x: 'excludeContent',
 		osp: 'overrideSourcePath',
 		orp: 'overrideSourceRoot'
-	}
+	},
+	string: ['i', 'o', 'osp', 'orp'],
+	boolean: ['x']
 });
 
 if (command.help) {
