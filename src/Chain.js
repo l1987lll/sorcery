@@ -6,8 +6,8 @@ import slash from './utils/slash.js';
 import SOURCEMAPPING_URL from './utils/sourceMappingURL.js';
 
 const SOURCEMAP_COMMENT = new RegExp( `\n*(?:` +
-	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^'"]+)|` +      // js
-	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"]+)\\s\\*\\/)` + // css
+	`\\/\\/[@#]\\s*${SOURCEMAPPING_URL}=([^'"\n]+)|` +      // js
+	`\\/\\*#?\\s*${SOURCEMAPPING_URL}=([^'"\n]+)\\s\\*\\/)` + // css
 '\\s*$', 'g' );
 
 export default function Chain ( node, sourcesContentByPath ) {
@@ -154,7 +154,7 @@ Chain.prototype = {
 
 function processWriteOptions ( dest, chain, options ) {
 	const resolved = resolve( dest );
-
+	
 	const map = chain.apply({
 		includeContent: options.includeContent,
 		base: options.base ? resolve( options.base ) : dirname( resolved )
