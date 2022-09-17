@@ -3,7 +3,10 @@ export function createOverridePathFunction(pathOverrides) {
     const overridePatterns = parsePathOverrides(pathOverrides);
     return function (filePath, originalPath) {
         const pattern = overridePatterns.find(function (p) {
-            return new RegExp(p.file.replace(/\//g, '\\\\')).test(filePath) && new RegExp(p.origin).test(originalPath);
+            return new RegExp(p.file.replace(/\//g, '\\\\')).test(filePath) && (
+                (originalPath == null && p.origin == '') ||
+                (originalPath && new RegExp(p.origin).test(originalPath))
+            );
         });
 
         if (pattern) {
