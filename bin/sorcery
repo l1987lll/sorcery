@@ -18,10 +18,11 @@ command = minimist(process.argv.slice(2), {
 		d: 'datauri',
 		x: 'excludeContent',
 		osp: 'overrideSourcePath',
-		orp: 'overrideSourceRoot'
+		orp: 'overrideSourceRoot',
+		isc: 'ignoreSourceContent'
 	},
 	string: ['i', 'o', 'osp', 'orp'],
-	boolean: ['x']
+	boolean: ['x', 'isc']
 });
 
 if (command.help) {
@@ -44,7 +45,8 @@ else {
 	// console.log('command: ', JSON.stringify(command));
 	const options = {
 		overrideSourcePathFunc: command.overrideSourcePath && sorcery.createOverridePathFunction(command.overrideSourcePath),
-		overrideSourceRootFunc: command.overrideSourceRoot && sorcery.createOverridePathFunction(command.overrideSourceRoot)
+		overrideSourceRootFunc: command.overrideSourceRoot && sorcery.createOverridePathFunction(command.overrideSourceRoot),
+		ignoreSourceContent: command.ignoreSourceContent || false
 	};
 
 	sander.stat(command.input).then(function (stats) {

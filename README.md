@@ -5,12 +5,16 @@ Forked from [Sorcery](https://github.com/Rich-Harris/sorcery) and made some chan
 4. Modify regex of matching SOURCEMAPPING_URL, the old regex might replace more content when existing multiple SOURCEMAPPING_URL at the end of the file.
 5. Add parent property to Node type, if the Node.file is null, it will use parent.file to resolve sourceRoot path.
 6. Give type to parameters of sorcery CLI.
-7. Add Feature: support overriding the path of sources and sourceRoot in sourcemap file. Usage as below:
+7. Add Feature: support overriding the path of sources and sourceRoot in sourcemap file. 
+8. Add Feature: support ignoring the sourcesContent property in source map file, and sorcery will read content from files specified in sources property.
+
+Usage as below:
 
 ```
 New Options:
   --osp <string>,        Override path of source in sourcemap file.    
   --orp <string>,        Override path of sourceRoot in sourcemap file.
+  --isc <boolean>,       Ignore the sourcesContent property in source map file.
 
 parameter pattern:
   jsFileRegex1 | matchRegex1 | replacement1 , jsFileRegex2 | matchRegex2 | replacement2 ...
@@ -59,6 +63,14 @@ sorcery.load('helloWorld.min.js', options).then(function (chain) {
 });
 
 ```
+
+Tips:
+1. you can use `yarn link` command in workspace folder to add a symlink to sorcery then use `yarn link sorcery` command in other project to use sorcery.
+2. you can execute below command in VSCode Javascript Debug Terminal to debug sorcery:
+
+   ```bash
+    node sorcery -x -i "F:\Sources\a\dist\vendor.js" -o "" --osp "" --orp "dist/[^.]+.js$ | .+ | ../"
+   ```
 
 
 -----------------------------------------------------------------

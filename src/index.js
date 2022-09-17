@@ -7,14 +7,14 @@ export { createOverridePathFunction } from './utils/pathOverrides';
 export function load(file, options) {
 	const { node, sourcesContentByPath, sourceMapByPath } = init(file, options);
 
-	return node.load(sourcesContentByPath, sourceMapByPath)
+	return node.load(sourcesContentByPath, sourceMapByPath, options.ignoreSourceContent)
 		.then(() => node.isOriginalSource ? null : new Chain(node, sourcesContentByPath));
 }
 
 export function loadSync(file, options = {}) {
 	const { node, sourcesContentByPath, sourceMapByPath } = init(file, options);
 
-	node.loadSync(sourcesContentByPath, sourceMapByPath);
+	node.loadSync(sourcesContentByPath, sourceMapByPath, options.ignoreSourceContent);
 	return node.isOriginalSource ? null : new Chain(node, sourcesContentByPath);
 }
 

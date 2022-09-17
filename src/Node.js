@@ -30,7 +30,7 @@ export default function Node({ file, content, parent, overrideSourcePathFunc, ov
 }
 
 Node.prototype = {
-	load(sourcesContentByPath, sourceMapByPath) {
+	load(sourcesContentByPath, sourceMapByPath, ignoreSourceContent) {
 		return getContent(this, sourcesContentByPath).then(content => {
 			this.content = sourcesContentByPath[this.file] = content;
 
@@ -45,7 +45,7 @@ Node.prototype = {
 				let decodingTime = process.hrtime(decodingStart);
 				this._stats.decodingTime = 1e9 * decodingTime[0] + decodingTime[1];
 
-				const sourcesContent = map.sourcesContent || [];
+				const sourcesContent = !ignoreSourceContent && map.sourcesContent || [];
 
 				const sourceRoot = resolve(getDirName(this), map.sourceRoot || '');
 
@@ -65,7 +65,7 @@ Node.prototype = {
 		});
 	},
 
-	loadSync(sourcesContentByPath, sourceMapByPath) {
+	loadSync(sourcesContentByPath, sourceMapByPath, ignoreSourceContent) {
 		if (!this.content) {
 			if (!sourcesContentByPath[this.file]) {
 				sourcesContentByPath[this.file] = readFileSync(this.file, { encoding: 'utf-8' });
@@ -84,7 +84,7 @@ Node.prototype = {
 			this.map = map;
 			this.mappings = decode(map.mappings);
 
-			sourcesContent = map.sourcesContent || [];
+			sourcesContent = !ignoreSourceContent && map.sourcesContent || [];
 
 			const sourceRoot = resolve(getDirName(this), map.sourceRoot || '');
 
@@ -179,7 +179,13 @@ function getContent(node, sourcesContentByPath) {
 	}
 
 	if (!node.content) {
-		return readFile(node.file, { encoding: 'utf-8' });
+		return readFile(node.file, { encoding: 'utf-8' }).catch(error => {
+			if (node.parent) {
+				error.message = error.message + `, occured in source map for file: ${node.parent.file}`;
+			}
+
+			throw error;
+		});
 	}
 
 	return Promise.resolve(node.content);
